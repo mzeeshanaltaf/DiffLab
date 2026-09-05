@@ -17,7 +17,7 @@ decisions, architecture, data model, design tokens. Read it first, every session
 - [x] Phase 04 — contact & privacy
 - [x] Phase 05 — structured diff (JSON/Excel)
 - [x] Phase 06 — image diff
-- [ ] Phase 07 — document diff
+- [x] Phase 07 — document diff
 - [ ] Phase 08 — sharing & persistence (resolve the 3 risks in 00-overview.md first)
 - [ ] Phase 09 — SEO & analytics
 - [ ] Phase 10 — deploy
@@ -107,6 +107,30 @@ extends the plan, note it in one line here so the next session doesn't rediscove
   Playwright script (no `chromium-cli` in this environment, same as Phase 5) against two differently-sized
   generated PNGs: padding/checkerboard, slider drag, fade blend, onion A/B toggle, pixel-diff highlighting
   + stats, zoom, and pan all confirmed visually with zero console errors.
+
+- **Phase 07 notes:** both parsers (`lib/parse/pdf.ts`, `lib/parse/docx.ts`) return the same shape —
+  `{ text, markers: {line, label}[] }` — so `document-compare.tsx` hands `text` straight to the exact
+  Phase 2 `MergeView`/`unifiedMergeView` setup (no language extension) and renders `markers` through a
+  new hand-rolled gutter (`lib/cm/marker-gutter.ts`, a plain `gutter({ lineMarker })` closing over a
+  static array — document text only changes on file load, never per keystroke, so there's no need for
+  a `StateField`/effect like CodeMirror's own dynamic gutters use). PDF: `pdfjs-dist`'s worker is a
+  build artifact, not a static asset, so `scripts/copy-pdf-worker.js` copies
+  `node_modules/pdfjs-dist/build/pdf.worker.min.mjs` → `public/pdf.worker.min.mjs` on every
+  `npm install` (wired via `postinstall`); `GlobalWorkerOptions.workerSrc` points at that public path.
+  Pages are split into lines using `TextItem.hasEOL` (pdf.js's own line-break flag) rather than any
+  y-position heuristic, with a "Page N" marker recorded at each page's first line. DOCX: `mammoth`
+  ships no types (no `@types/mammoth` exists either), so `types/mammoth.d.ts` declares the minimal
+  `convertToHtml` surface actually used. Rather than trust blank-line grouping in `extractRawText`,
+  DOCX goes through `convertToHtml` + `DOMParser` and flattens each block element (`p`/`h1-6`/`li`/
+  table cell) to exactly one line, so every line has an unambiguous 1:1 paragraph marker (`¶ N`) —
+  list items inside `ul`/`ol` are recursed into rather than squashed into their parent's text. PPTX
+  (and legacy `.doc`) are rejected with an inline error badge via the same `InputPaneHeader` error prop
+  Phase 5 uses for bad JSON/CSV, not silently mis-parsed. No language selector or examples dropdown in
+  `document-toolbar.tsx` (documents have neither concept) — otherwise identical options to the text
+  tool. Verified end-to-end with a throwaway Playwright script (same pattern as Phases 5/6): two real
+  multi-page PDFs from Chromium's own `page.pdf()` and two real DOCX files from `pandoc` (both already
+  present in this environment) confirmed page/paragraph gutters, word-level highlighting, stats, and
+  the PPTX rejection message, with zero console errors.
 
 ## Standing rules (don't relitigate)
 

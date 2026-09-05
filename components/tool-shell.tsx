@@ -28,11 +28,17 @@ const ImageCompare = dynamic(() => import("@/components/compare/image-compare").
   loading,
 });
 
+const DocumentCompare = dynamic(() => import("@/components/compare/document-compare").then((m) => m.DocumentCompare), {
+  ssr: false,
+  loading,
+});
+
 const TOOLS = {
   text: TextCompare,
   json: JsonCompare,
   excel: ExcelCompare,
   image: ImageCompare,
+  document: DocumentCompare,
 } as const;
 
 export type ToolMode = keyof typeof TOOLS;

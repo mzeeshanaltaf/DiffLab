@@ -29,6 +29,13 @@ export const editorTheme = EditorView.theme({
     borderRight: "1px solid var(--border)",
   },
   ".cm-lineNumbers .cm-gutterElement": { padding: "0 8px 0 12px" },
+  ".cm-marker-gutter": { fontSize: "11px" },
+  ".cm-marker-gutter .cm-gutterElement": { padding: "0 10px" },
+  ".cm-marker-label": {
+    color: "var(--primary)",
+    fontWeight: 500,
+    whiteSpace: "nowrap",
+  },
   ".cm-activeLine": {
     backgroundColor: "color-mix(in oklch, var(--foreground) 6%, transparent)",
   },
