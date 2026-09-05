@@ -13,7 +13,7 @@ decisions, architecture, data model, design tokens. Read it first, every session
 
 - [x] Phase 01 — foundation (scaffold, shadcn init, dark/emerald theme, header/footer, theme toggle)
 - [x] Phase 02 — text diff engine (biggest phase — the core product)
-- [ ] Phase 03 — landing page
+- [x] Phase 03 — landing page
 - [ ] Phase 04 — contact & privacy
 - [ ] Phase 05 — structured diff (JSON/Excel)
 - [ ] Phase 06 — image diff
@@ -34,6 +34,20 @@ extends the plan, note it in one line here so the next session doesn't rediscove
   full-rebuild path for simplicity — cursor/undo history resets on toggle, an acceptable v1 trade-off.
   No `codemirror`/`basicSetup` meta-package — `lib/cm/setup.ts` hand-assembles the minimal extension set
   from the granular packages listed in 00-overview.md.
+
+- **Phase 03 notes:** used `motion` (the `framer-motion` successor, imported from `motion/react`) instead
+  of `framer-motion` per current upstream guidance; `MotionConfig reducedMotion="user"` is set once in
+  `app/layout.tsx` rather than scattering `useReducedMotion()` checks into every `initial` prop — SSR
+  bakes `initial` values into inline styles, so a component-level `reduce ? false : {...}` branch renders
+  differently server vs. client whenever the visitor's OS actually has reduced-motion on, which is a real
+  hydration mismatch (confirmed via a Playwright `reducedMotion: "reduce"` context during this session).
+  `MotionConfig` keeps `initial` deterministic and collapses the transition to instant client-side instead.
+  The hero's `LiveDiffDemo` renders its diff lines as plain static markup (no entrance animation) to
+  protect LCP/avoid the same SSR-opacity-0 trap on above-the-fold content; only the blinking cursor is
+  client-only, gated behind a `useSyncExternalStore`-based `useIsClient()` (not `useState`+`useEffect`,
+  which trips the `react-hooks/set-state-in-effect` lint rule). No dedicated `/compare/json`, `/compare/excel`,
+  `/compare/image`, `/compare/document` routes exist yet (phases 5-7), so the landing page's file-type
+  grid is informational only (no links) with an honest "next" caption rather than linking to 404s.
 
 ## Standing rules (don't relitigate)
 
