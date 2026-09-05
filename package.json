@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "node scripts/copy-pdf-worker.js"
+    "postinstall": "prisma generate && node scripts/copy-pdf-worker.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
