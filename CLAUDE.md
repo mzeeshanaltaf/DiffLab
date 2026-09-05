@@ -20,7 +20,7 @@ decisions, architecture, data model, design tokens. Read it first, every session
 - [x] Phase 07 — document diff
 - [x] Phase 08 — sharing & persistence
 - [x] Phase 09 — SEO & analytics
-- [ ] Phase 10 — deploy
+- [x] Phase 10 — deploy
 
 **When you finish a phase:** check its box above, and if you made a decision that deviates from or
 extends the plan, note it in one line here so the next session doesn't rediscover it.
@@ -198,6 +198,26 @@ extends the plan, note it in one line here so the next session doesn't rediscove
   tracking script client-side via `document.createElement` on mount, so it produces no server-rendered
   markup and is a verified no-op until the app is actually deployed on Vercel with Web Analytics enabled
   in the project dashboard.
+
+- **Phase 10 notes:** deployed via the Vercel CLI (`npx vercel`) rather than the dashboard import
+  flow — `vercel link --project difflab` both created the project and auto-connected the existing
+  `mzeeshanaltaf/DiffLab` GitHub repo (device-flow login auto-approved against an already-authenticated
+  browser session, no manual click needed). All 5 env vars from `.env.local` were pushed via `vercel env
+  add <NAME> <target>` (one call per target — passing multiple targets as separate args is misparsed as
+  `<environment> <gitBranch>` and fails with `branch_not_found`); `DATABASE_URL` went to Production +
+  Preview, the other 4 to Production + Preview as planned. First deploy: `vercel deploy --prod`.
+  **Deviation from this file's own plan:** `vercel domains add difflab.zeeshanai.cloud difflab` then
+  `vercel domains inspect` returned Vercel's *actual* required record for this domain as an **A record
+  `difflab → 76.76.21.21`**, not the `CNAME → cname.vercel-dns.com` the plan guessed — created that A
+  record on Hostinger DNS via the `hostinger-dns` MCP (`DNS_updateDNSRecordsV1`, `overwrite:false` so it
+  only appended, verified first against `DNS_getDNSRecordsV1` that no `difflab` record already existed
+  and that it wouldn't collide with the Coolify box's other 20+ subdomains). DNS resolved and Vercel's
+  auto-provisioned SSL was live within under a minute (no manual "verify" step needed). Smoke-tested
+  every route plus the two DB-backed API routes for real: `POST /api/diffs` → `GET /d/[id]` round-tripped
+  successfully (confirms the Phase 8 Prisma multi-schema/`uselibpqcompat` setup works from Vercel's
+  network, not just locally), and `POST /api/contact` with the honeypot field filled returned
+  `{success:true}` without hitting the real n8n webhook — verified the anti-spam path without sending a
+  real notification. Live at **https://difflab.zeeshanai.cloud**.
 
 ## Standing rules (don't relitigate)
 
