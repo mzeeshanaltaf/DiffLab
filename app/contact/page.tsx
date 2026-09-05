@@ -1,11 +1,13 @@
-import type { Metadata } from "next";
 import { MessageSquareText } from "lucide-react";
 import { ContactForm } from "@/components/contact/contact-form";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Contact & Feedback",
-  description: "Share feedback, report a bug, or suggest a feature.",
-};
+  description:
+    "Get in touch with the DiffLab team. Share feedback, report a bug, or suggest a new feature — we read every message.",
+  path: "/contact",
+});
 
 // Short error codes set by the API route's redirect (?error=...) mapped to
 // human-readable copy. Keep keys in sync with the route handler's fail() calls.

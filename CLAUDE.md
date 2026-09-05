@@ -19,7 +19,7 @@ decisions, architecture, data model, design tokens. Read it first, every session
 - [x] Phase 06 — image diff
 - [x] Phase 07 — document diff
 - [x] Phase 08 — sharing & persistence
-- [ ] Phase 09 — SEO & analytics
+- [x] Phase 09 — SEO & analytics
 - [ ] Phase 10 — deploy
 
 **When you finish a phase:** check its box above, and if you made a decision that deviates from or
@@ -168,6 +168,36 @@ extends the plan, note it in one line here so the next session doesn't rediscove
   created `/d/[id]` rendered its content in a fresh browser context, a `SELECT` against
   `difflab.diffs` showed real rows with `views` incrementing, and a rapid-fire loop against
   `/api/diffs` returned 429 — zero console errors throughout.
+
+- **Phase 09 notes:** `lib/seo.ts` centralizes `SITE_URL`/`SITE_NAME` and a `pageMetadata({title,
+  description, path})` helper used by every route's `metadata` export — necessary because Next's
+  metadata merging is shallow: a page that defines `openGraph`/`twitter` fully replaces (doesn't
+  deep-merge with) the root layout's, so each page must restate its own title/description inside
+  those nested objects rather than relying on inheritance. `app/opengraph-image.tsx` is a single
+  root-level `next/og` `ImageResponse` (dark/emerald branded, badge + wordmark + tagline + a
+  "Try it free — no signup →" CTA pill) that applies to every route via file-convention lookup;
+  no per-route OG images since the tools have no per-page visual to differentiate on. `app/sitemap.ts`
+  lists the 8 public routes (`/`, five `/compare/*`, `/contact`, `/privacy`); `/d/[id]` is intentionally
+  excluded and stays noindexed via the per-page `robots` meta added in Phase 8, reinforced by
+  `app/robots.ts` disallowing `/d/` and `/api/` outright. JSON-LD (`SoftwareApplication` + `FAQPage`,
+  built from a `FAQS` array now exported out of `components/landing/faq.tsx` so the structured data
+  can't drift from the visible FAQ copy) lives in `app/page.tsx` as a single `<script type="application/
+  ld+json">` with both objects in a top-level array. Running the `seo-audit` skill against the built
+  site surfaced one real defect worth recording: **all five `/compare/*` tool pages had zero `<h1>`** —
+  `ToolShell` is a client-only dynamic import with no heading of its own, so `page.tsx` (a Server
+  Component) needed its own compact `<h1>` added directly, sized small (`text-base font-semibold`) to
+  keep the "quiet and utilitarian" tool chrome per 00-overview.md's design direction without disturbing
+  the `calc(100vh-230px)` viewport-height budget each tool's editor pane depends on (confirmed via a
+  rebuilt+restarted prod server, not the stale one still bound to the port from the previous check —
+  `next start` binds to a build snapshot, so a killed/re-launched server is required to see fixes, a
+  `curl` against a stale process silently serves the old HTML with no error). Also fixed from the audit:
+  the image tool's meta description was 161 chars (over the 160 truncation limit) and the contact
+  page's was only 51 (under the 70-char "wasted opportunity" floor) — both rewritten to fit.
+  `@vercel/analytics`'s `<Analytics/>` (from the `/next` entry, App-Router-aware) is mounted directly in
+  `app/layout.tsx`'s `<body>` as a sibling after the provider tree, not inside it — it injects its
+  tracking script client-side via `document.createElement` on mount, so it produces no server-rendered
+  markup and is a verified no-op until the app is actually deployed on Vercel with Web Analytics enabled
+  in the project dashboard.
 
 ## Standing rules (don't relitigate)
 

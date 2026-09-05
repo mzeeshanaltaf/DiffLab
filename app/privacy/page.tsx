@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { ShieldCheck } from "lucide-react";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Privacy",
   description: "What DiffLab stores, what it doesn't, and what the contact form sends.",
-};
+  path: "/privacy",
+});
 
 const SECTIONS = [
   {

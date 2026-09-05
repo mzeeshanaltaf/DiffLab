@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { Reveal } from "@/components/landing/reveal";
 
-const FAQS = [
+export const FAQS = [
   {
     question: "Does anything get uploaded?",
     answer:

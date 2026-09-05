@@ -1,0 +1,25 @@
+# DiffLab
+
+> DiffLab is a free, browser-based diff and comparison tool for text, code, JSON, spreadsheets,
+> images, and documents. Parsing, comparing, and rendering all happen client-side — nothing is
+> uploaded unless the user explicitly chooses to share a link.
+
+## Tools
+
+- [Text & Code Diff Checker](https://difflab.zeeshanai.cloud/compare/text): Live side-by-side and unified diffs with syntax highlighting across 40+ languages, word/character/line precision, ignore whitespace/case/regex, per-chunk merge and revert, and unified-patch export.
+- [JSON Diff Checker](https://difflab.zeeshanai.cloud/compare/json): Compares two JSON documents with inline parse-error markers, pretty-printing, optional recursive key sorting, and a semantic summary of added, removed, and changed key paths.
+- [Excel & CSV Diff Checker](https://difflab.zeeshanai.cloud/compare/excel): Compares XLSX, XLS, CSV, TSV, and ODS spreadsheets sheet-by-sheet, aligning rows by position or a chosen key column, with cell-level highlighting.
+- [Image Diff Checker](https://difflab.zeeshanai.cloud/compare/image): Compares two images via slider, fade, onion-skin, or pixel-level difference modes; mismatched dimensions are padded, never cropped.
+- [Document Diff Checker](https://difflab.zeeshanai.cloud/compare/document): Compares PDF and Word documents with a page/paragraph marker gutter, using the same diff engine as the text tool.
+
+## Pages
+
+- [Home](https://difflab.zeeshanai.cloud/): Landing page introducing all five comparison tools.
+- [Contact](https://difflab.zeeshanai.cloud/contact): Feedback, bug reports, and feature requests.
+- [Privacy](https://difflab.zeeshanai.cloud/privacy): What is and isn't stored, and the client-side-by-default privacy model.
+
+## Notes
+
+- Free to use, no account required, no usage limits.
+- Nothing is uploaded unless the user clicks "Save & share"; small diffs are encoded directly into the URL, larger ones are stored and served back only to holders of the resulting link.
+- Saved diffs live at /d/{id}, are ephemeral (expire per the sharer's choice), and are intentionally excluded from indexing — not canonical content.
