@@ -14,7 +14,7 @@ decisions, architecture, data model, design tokens. Read it first, every session
 - [x] Phase 01 — foundation (scaffold, shadcn init, dark/emerald theme, header/footer, theme toggle)
 - [x] Phase 02 — text diff engine (biggest phase — the core product)
 - [x] Phase 03 — landing page
-- [ ] Phase 04 — contact & privacy
+- [x] Phase 04 — contact & privacy
 - [ ] Phase 05 — structured diff (JSON/Excel)
 - [ ] Phase 06 — image diff
 - [ ] Phase 07 — document diff
@@ -48,6 +48,18 @@ extends the plan, note it in one line here so the next session doesn't rediscove
   which trips the `react-hooks/set-state-in-effect` lint rule). No dedicated `/compare/json`, `/compare/excel`,
   `/compare/image`, `/compare/document` routes exist yet (phases 5-7), so the landing page's file-type
   grid is informational only (no links) with an honest "next" caption rather than linking to 404s.
+
+- **Phase 04 notes:** built via the `nextjs-contact-form` skill's four templates, restyled onto the
+  project's own shadcn components (`Input`/`Label`/`Textarea`/`Button`) instead of the templates' raw
+  Tailwind baseline; added `components/ui/textarea.tsx` since base-nova/Base UI has no textarea
+  primitive to wrap — it's a plain native `<textarea>` with the same class treatment as `ui/input.tsx`.
+  `lib/rate-limit.ts` and `app/api/contact/route.ts` are copied in verbatim (they're already
+  framework-neutral); only `source: "difflab"` was filled in. Privacy page's "Save & share" section
+  describes Phase 8's not-yet-built persistence honestly as the intended design (hash for small diffs,
+  DB row + 1d/7d/30d/never expiry for large ones) rather than claiming it's live. `/contact` and
+  `/privacy` are linked from `SiteFooter` only, not the header's mode nav — verified end-to-end against
+  the real n8n webhook and Upstash instance in `.env.local`: a real submission returned `{success:true}`,
+  a honeypot-filled payload was silently swallowed, and the 6th rapid submission returned 429.
 
 ## Standing rules (don't relitigate)
 
