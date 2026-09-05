@@ -81,6 +81,17 @@
   --sidebar-accent-foreground: oklch(0.4 0.13 163);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.596 0.145 163.2);
+
+  --cm-comment: oklch(0.556 0.02 165);
+  --cm-keyword: oklch(0.5 0.18 320);
+  --cm-string: oklch(0.5 0.15 30);
+  --cm-number: oklch(0.55 0.16 230);
+  --cm-function: oklch(0.5 0.14 250);
+  --cm-variable: oklch(0.3 0 0);
+  --cm-type: oklch(0.5 0.13 80);
+  --cm-property: oklch(0.45 0.1 220);
+  --cm-punctuation: oklch(0.45 0 0);
+  --cm-tag: oklch(0.55 0.16 15);
 }
 
 .dark {
@@ -115,6 +126,17 @@
   --sidebar-accent-foreground: oklch(0.85 0.13 163);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.723 0.163 163.2);
+
+  --cm-comment: oklch(0.64 0 0);
+  --cm-keyword: oklch(0.75 0.16 320);
+  --cm-string: oklch(0.75 0.13 40);
+  --cm-number: oklch(0.75 0.14 220);
+  --cm-function: oklch(0.78 0.12 250);
+  --cm-variable: oklch(0.9 0 0);
+  --cm-type: oklch(0.8 0.12 90);
+  --cm-property: oklch(0.78 0.09 210);
+  --cm-punctuation: oklch(0.75 0 0);
+  --cm-tag: oklch(0.75 0.15 20);
 }
 
 @layer base {
@@ -126,5 +148,34 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/*
+ * @codemirror/merge's MergeView is not scrollable by default (see its docs) — you're expected to
+ * give `.cm-mergeView` a height + overflow yourself. This can't be done via EditorView.theme() /
+ * baseTheme(): both rewrite bare selectors as "<editor-scope-class> .cm-mergeView", i.e. they require
+ * `.cm-mergeView` to be a *descendant* of the scoped editor, but it's actually the ancestor of the two
+ * side-by-side editors — so that rule silently never matches. Plain global CSS is required instead.
+ */
+.cm-mergeView {
+  height: 100%;
+  overflow: auto;
+}
+
+@media print {
+  .cm-editor .cm-scroller,
+  .cm-mergeView,
+  .cm-mergeViewEditor,
+  .cm-mergeViewEditors {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  :root {
+    --background: oklch(1 0 0);
+    --card: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
   }
 }

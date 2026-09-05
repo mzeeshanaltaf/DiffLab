@@ -12,7 +12,7 @@ decisions, architecture, data model, design tokens. Read it first, every session
 ## Status
 
 - [x] Phase 01 — foundation (scaffold, shadcn init, dark/emerald theme, header/footer, theme toggle)
-- [ ] Phase 02 — text diff engine (biggest phase — the core product)
+- [x] Phase 02 — text diff engine (biggest phase — the core product)
 - [ ] Phase 03 — landing page
 - [ ] Phase 04 — contact & privacy
 - [ ] Phase 05 — structured diff (JSON/Excel)
@@ -24,6 +24,16 @@ decisions, architecture, data model, design tokens. Read it first, every session
 
 **When you finish a phase:** check its box above, and if you made a decision that deviates from or
 extends the plan, note it in one line here so the next session doesn't rediscover it.
+
+- **Phase 02 notes:** `@codemirror/merge`'s `DiffConfig` has no ignore-whitespace/case/regex options, so
+  `lib/diff/normalize.ts` builds a length-mapped "masked" comparison string (regex/whitespace runs → a
+  single placeholder char, same-length so offsets stay valid) and `lib/diff/engine.ts` runs `jsdiff` on
+  it, translating positions back to real doc offsets via `override`. Precision/ignore-* toggles and the
+  split↔unified switch fully rebuild the `MergeView`/`unifiedMergeView` (reconfigure() doesn't re-run
+  `Chunk.build` for a changed `diffConfig`); collapse/gutter/line-wrap/language changes take the same
+  full-rebuild path for simplicity — cursor/undo history resets on toggle, an acceptable v1 trade-off.
+  No `codemirror`/`basicSetup` meta-package — `lib/cm/setup.ts` hand-assembles the minimal extension set
+  from the granular packages listed in 00-overview.md.
 
 ## Standing rules (don't relitigate)
 
