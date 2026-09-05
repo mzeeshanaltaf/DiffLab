@@ -1,12 +1,14 @@
+import Link from "next/link";
 import { Braces, FileCode2, FileSpreadsheet, FileText, Image as ImageIcon } from "lucide-react";
 import { Reveal } from "@/components/landing/reveal";
+import { cn } from "@/lib/utils";
 
 const FILE_TYPES = [
-  { label: "Text & code", icon: FileCode2 },
-  { label: "JSON", icon: Braces },
-  { label: "Spreadsheets", icon: FileSpreadsheet },
-  { label: "Images", icon: ImageIcon },
-  { label: "Documents", icon: FileText },
+  { label: "Text & code", icon: FileCode2, href: "/compare/text" },
+  { label: "JSON", icon: Braces, href: "/compare/json" },
+  { label: "Spreadsheets", icon: FileSpreadsheet, href: "/compare/excel" },
+  { label: "Images", icon: ImageIcon, href: null },
+  { label: "Documents", icon: FileText, href: null },
 ];
 
 export function FileTypeGrid() {
@@ -18,21 +20,33 @@ export function FileTypeGrid() {
       </Reveal>
 
       <Reveal delay={0.1} className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-5">
-        {FILE_TYPES.map((type) => (
-          <div
-            key={type.label}
-            className="flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-8 text-center"
-          >
-            <span className="flex size-12 items-center justify-center rounded-2xl border border-border/60 text-primary">
-              <type.icon className="size-5" />
-            </span>
-            <span className="text-sm font-medium">{type.label}</span>
-          </div>
-        ))}
+        {FILE_TYPES.map((type) => {
+          const content = (
+            <>
+              <span className="flex size-12 items-center justify-center rounded-2xl border border-border/60 text-primary">
+                <type.icon className="size-5" />
+              </span>
+              <span className="text-sm font-medium">{type.label}</span>
+            </>
+          );
+          const className = cn(
+            "flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-8 text-center",
+            type.href && "transition-colors hover:border-primary/60 hover:bg-accent"
+          );
+          return type.href ? (
+            <Link key={type.label} href={type.href} className={className}>
+              {content}
+            </Link>
+          ) : (
+            <div key={type.label} className={className}>
+              {content}
+            </div>
+          );
+        })}
       </Reveal>
 
       <p className="mt-6 text-sm text-muted-foreground">
-        Text and code are ready today. JSON, spreadsheets, images, and documents are next.
+        Text, code, JSON, and spreadsheets are ready today. Images and documents are next.
       </p>
     </section>
   );

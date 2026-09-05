@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Clipboard, FileUp, X } from "lucide-react";
+import { Clipboard, FileUp, TriangleAlert, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,6 +15,10 @@ interface InputPaneHeaderProps {
   onFile: (file: File) => void;
   onPasteText: (text: string) => void;
   onClear: () => void;
+  /** Optional inline error (e.g. a JSON parse error) shown as a badge next to the filename. */
+  error?: string | null;
+  hidePaste?: boolean;
+  fileAccept?: string;
 }
 
 export function InputPaneHeader({
@@ -25,6 +29,9 @@ export function InputPaneHeader({
   onFile,
   onPasteText,
   onClear,
+  error,
+  hidePaste,
+  fileAccept,
 }: InputPaneHeaderProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -67,22 +74,37 @@ export function InputPaneHeader({
           <span className="truncate">{filename}</span>
         </Badge>
       ) : null}
-      <div className="ml-auto flex shrink-0 items-center gap-0.5">
+      {error ? (
         <Tooltip>
           <TooltipTrigger
             render={
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Paste into ${label}`}
-                onClick={handlePaste}
-              >
-                <Clipboard className={cn(pasteError && "text-destructive")} />
-              </Button>
+              <Badge variant="destructive" className="min-w-0 shrink-0 gap-1 font-normal">
+                <TriangleAlert className="size-3" />
+                <span className="truncate">{error}</span>
+              </Badge>
             }
           />
-          <TooltipContent>{pasteError ? "Clipboard permission denied" : "Paste from clipboard"}</TooltipContent>
+          <TooltipContent>{error}</TooltipContent>
         </Tooltip>
+      ) : null}
+      <div className="ml-auto flex shrink-0 items-center gap-0.5">
+        {!hidePaste ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Paste into ${label}`}
+                  onClick={handlePaste}
+                >
+                  <Clipboard className={cn(pasteError && "text-destructive")} />
+                </Button>
+              }
+            />
+            <TooltipContent>{pasteError ? "Clipboard permission denied" : "Paste from clipboard"}</TooltipContent>
+          </Tooltip>
+        ) : null}
         <Tooltip>
           <TooltipTrigger
             render={
@@ -112,6 +134,7 @@ export function InputPaneHeader({
       <input
         ref={fileInputRef}
         type="file"
+        accept={fileAccept}
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];

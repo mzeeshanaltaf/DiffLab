@@ -15,7 +15,7 @@ decisions, architecture, data model, design tokens. Read it first, every session
 - [x] Phase 02 — text diff engine (biggest phase — the core product)
 - [x] Phase 03 — landing page
 - [x] Phase 04 — contact & privacy
-- [ ] Phase 05 — structured diff (JSON/Excel)
+- [x] Phase 05 — structured diff (JSON/Excel)
 - [ ] Phase 06 — image diff
 - [ ] Phase 07 — document diff
 - [ ] Phase 08 — sharing & persistence (resolve the 3 risks in 00-overview.md first)
@@ -60,6 +60,29 @@ extends the plan, note it in one line here so the next session doesn't rediscove
   `/privacy` are linked from `SiteFooter` only, not the header's mode nav — verified end-to-end against
   the real n8n webhook and Upstash instance in `.env.local`: a real submission returned `{success:true}`,
   a honeypot-filled payload was silently swallowed, and the 6th rapid submission returned 429.
+
+- **Phase 05 notes:** JSON tool (`json-compare.tsx`) hands off to the exact Phase 2 engine — it pretty-prints
+  each side (`lib/parse/json.ts`, with optional recursive key-sort) into the same `MergeView`/`unifiedMergeView`
+  used by the text tool, so precision/ignore-regex/collapse all carry over for free. Parse errors surface two
+  ways: an inline `@codemirror/lint` gutter marker (added as a direct dependency — it was only a transitive
+  one before) that re-parses on every doc change, and a red badge in the pane header; the "empty pane" case is
+  special-cased out of both so an untouched side isn't flagged as an error. The semantic key-path summary
+  (`lib/diff/json-diff.ts`) walks the *parsed values*, independent of formatting/key order, so it only lights
+  up once both sides are valid JSON. Excel/CSV (`excel-compare.tsx`) has no test-framework precedent in this
+  repo, so it was smoke-tested with a throwaway Playwright script against the running dev server (chromium-cli
+  wasn't available in this environment) rather than skipped — caught a real bug where CSV uploads were named
+  after the file (`left.csv`/`right.csv`), which meant the two sides could never align as "the same sheet";
+  fixed by always naming a bare CSV/TSV parse `Sheet1`. There's no `react-window`/`react-virtual` dependency —
+  `virtual-grid.tsx` is a ~100-line hand-rolled windowed grid (absolute-positioned rows + a `ResizeObserver`),
+  reused for both the Original/Changed panes with scroll manually synced via refs. Row alignment is index-based
+  or by a chosen key column (`lib/diff/sheet-diff.ts`); shadcn has no Tabs primitive in this project, so sheet
+  tabs reuse `ToggleGroup` like the split/unified switch. One shadcn quirk worth remembering: Base UI's
+  `<Select.Value>` renders the raw selected value, not the matching `<Select.Item>`'s label, unless you pass it
+  a `children` render-prop function — used for the indent and key-column selects since their values (`2`, `4`,
+  `0`, `1`...) aren't self-describing the way `smart`/`line`/`word` already were in the Phase 2 toolbar.
+  Also updated `file-type-grid.tsx` on the landing page (Phase 3 left it link-free on purpose, see its
+  note above) so the Text/JSON/Spreadsheets cards now link to their live tools; Images/Documents stay
+  plain divs until phases 6-7.
 
 ## Standing rules (don't relitigate)
 
