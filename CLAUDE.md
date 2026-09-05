@@ -16,7 +16,7 @@ decisions, architecture, data model, design tokens. Read it first, every session
 - [x] Phase 03 — landing page
 - [x] Phase 04 — contact & privacy
 - [x] Phase 05 — structured diff (JSON/Excel)
-- [ ] Phase 06 — image diff
+- [x] Phase 06 — image diff
 - [ ] Phase 07 — document diff
 - [ ] Phase 08 — sharing & persistence (resolve the 3 risks in 00-overview.md first)
 - [ ] Phase 09 — SEO & analytics
@@ -83,6 +83,30 @@ extends the plan, note it in one line here so the next session doesn't rediscove
   Also updated `file-type-grid.tsx` on the landing page (Phase 3 left it link-free on purpose, see its
   note above) so the Text/JSON/Spreadsheets cards now link to their live tools; Images/Documents stay
   plain divs until phases 6-7.
+
+- **Phase 06 notes:** all four overlay modes (slider/fade/onion/diff) plus side-by-side share one
+  `ImageViewport` (`components/compare/image-viewport.tsx`) driven by a hand-rolled `useZoomPan` hook
+  (`hooks/use-zoom-pan.ts` — new alias dir, wheel-to-zoom + pointer-drag-to-pan, clamped 0.1–8×, with a
+  fit-to-container effect that re-fits whenever a new image pair's padded canvas size changes). Images
+  load via `createImageBitmap` for pixel access plus a parallel `URL.createObjectURL` for cheap `<img>`
+  display (`lib/diff/image-diff.ts`); mismatched dimensions are handled by sizing every mode's canvas box
+  to `max(leftW,rightW) x max(leftH,rightH)` and drawing each image at its own natural size top-left, so
+  the extra area shows through as a CSS checkerboard rather than stretching either image. Pixel diff uses
+  `pixelmatch` directly on two same-size `ImageData` buffers from offscreen canvases (padded area vs. any
+  real pixel reliably counts as a diff, which is the desired behavior for size mismatches); a 40-megapixel
+  padded-canvas guard skips the computation with an inline message instead of hanging the main thread —
+  no worker, consistent with Phases 2/5 not using the `workers/` dir either. `pixelmatch` ships its own
+  `.d.ts` (v7.2.0), so `@types/pixelmatch` was installed then removed as redundant. Onion skin is
+  implemented as an instant A/B toggle (plus an optional auto-flicker interval) rather than a continuous
+  blend, to stay meaningfully distinct from the fade mode's opacity slider. `InputPaneHeader`'s clipboard-paste
+  button only reads clipboard text, so the image tool passes `hidePaste` — no clipboard-image paste in v1,
+  upload/drag-drop only. Added the `slider` shadcn/Base UI component (none existed) for the fade-opacity and
+  diff-sensitivity controls; its generic `onValueChange` typed as `Value extends number ? number : Value`
+  resolves to a union when the wrapper component doesn't forward a generic, so callers narrow with a small
+  `firstValue()` helper in `image-toolbar.tsx` rather than casting. Verified end-to-end with a throwaway
+  Playwright script (no `chromium-cli` in this environment, same as Phase 5) against two differently-sized
+  generated PNGs: padding/checkerboard, slider drag, fade blend, onion A/B toggle, pixel-diff highlighting
+  + stats, zoom, and pan all confirmed visually with zero console errors.
 
 ## Standing rules (don't relitigate)
 

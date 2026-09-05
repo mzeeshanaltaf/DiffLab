@@ -7,7 +7,7 @@ const FILE_TYPES = [
   { label: "Text & code", icon: FileCode2, href: "/compare/text" },
   { label: "JSON", icon: Braces, href: "/compare/json" },
   { label: "Spreadsheets", icon: FileSpreadsheet, href: "/compare/excel" },
-  { label: "Images", icon: ImageIcon, href: null },
+  { label: "Images", icon: ImageIcon, href: "/compare/image" },
   { label: "Documents", icon: FileText, href: null },
 ];
 
@@ -46,7 +46,7 @@ export function FileTypeGrid() {
       </Reveal>
 
       <p className="mt-6 text-sm text-muted-foreground">
-        Text, code, JSON, and spreadsheets are ready today. Images and documents are next.
+        Text, code, JSON, spreadsheets, and images are ready today. Documents are next.
       </p>
     </section>
   );
