@@ -9,6 +9,7 @@ import { buildDiffConfig, computeDiffStats, type DiffStats } from "@/lib/diff/en
 import { compileIgnoreRegex, DEFAULT_DIFF_OPTIONS, type Precision } from "@/lib/diff/normalize";
 import { createUnifiedPatch, downloadTextFile } from "@/lib/diff/patch";
 import { getDiffExample } from "@/lib/diff/examples";
+import { readShareHashFromLocation } from "@/lib/share/url";
 import { InputPaneHeader } from "./input-pane";
 import { Toolbar } from "./toolbar";
 import { StatsBar } from "./stats-bar";
@@ -16,7 +17,20 @@ import { StatsBar } from "./stats-bar";
 type ViewMode = "split" | "unified";
 type MergeDirection = "a-to-b" | "b-to-a";
 
-export function TextCompare() {
+interface TextShareData {
+  left: string;
+  right: string;
+  leftFilename: string | null;
+  rightFilename: string | null;
+  languageId: string;
+  viewMode: ViewMode;
+  precision: Precision;
+  ignoreWhitespace: boolean;
+  ignoreCase: boolean;
+  ignoreRegex: string;
+}
+
+export function TextCompare({ initial }: { initial?: Partial<TextShareData> }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const leftTextRef = useRef("");
   const rightTextRef = useRef("");
@@ -135,6 +149,52 @@ export function TextCompare() {
     const command = direction === "next" ? goToNextChunk : goToPreviousChunk;
     if (mergeViewRef.current) command(mergeViewRef.current.b);
     else if (editorViewRef.current) command(editorViewRef.current);
+  }, []);
+
+  const getShareData = useCallback(
+    (): TextShareData => ({
+      left: leftTextRef.current,
+      right: rightTextRef.current,
+      leftFilename,
+      rightFilename,
+      languageId,
+      viewMode,
+      precision,
+      ignoreWhitespace,
+      ignoreCase,
+      ignoreRegex,
+    }),
+    [leftFilename, rightFilename, languageId, viewMode, precision, ignoreWhitespace, ignoreCase, ignoreRegex]
+  );
+
+  // Restore from either a saved diff (passed in as `initial` by /d/[id]) or a
+  // `#d=...` hash on this same tool URL. Hash takes over only when there's no
+  // `initial` prop, so /d/[id] never gets shadowed by a stray hash.
+  useEffect(() => {
+    const restore =
+      initial ??
+      (() => {
+        const fromHash = readShareHashFromLocation();
+        return fromHash?.mode === "text" ? (fromHash.data as Partial<TextShareData>) : undefined;
+      })();
+    if (!restore) return;
+
+    if (typeof restore.left === "string") leftTextRef.current = restore.left;
+    if (typeof restore.right === "string") rightTextRef.current = restore.right;
+    if (restore.leftFilename !== undefined) setLeftFilename(restore.leftFilename);
+    if (restore.rightFilename !== undefined) setRightFilename(restore.rightFilename);
+    if (restore.languageId) {
+      languageAutoRef.current = false;
+      setLanguageId(restore.languageId);
+    }
+    if (restore.viewMode) setViewMode(restore.viewMode);
+    if (restore.precision) setPrecision(restore.precision);
+    if (typeof restore.ignoreWhitespace === "boolean") setIgnoreWhitespace(restore.ignoreWhitespace);
+    if (typeof restore.ignoreCase === "boolean") setIgnoreCase(restore.ignoreCase);
+    if (typeof restore.ignoreRegex === "string") setIgnoreRegex(restore.ignoreRegex);
+    setReloadKey((k) => k + 1);
+    // Runs once on mount only -- `initial` is a stable prop for the lifetime of this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -259,6 +319,7 @@ export function TextCompare() {
         onExportPatch={handleExportPatch}
         onCopyPatch={handleCopyPatch}
         onPrint={handlePrint}
+        getShareData={getShareData}
       />
 
       <div className="grid grid-cols-2 print:hidden">

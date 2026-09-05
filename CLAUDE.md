@@ -18,7 +18,7 @@ decisions, architecture, data model, design tokens. Read it first, every session
 - [x] Phase 05 — structured diff (JSON/Excel)
 - [x] Phase 06 — image diff
 - [x] Phase 07 — document diff
-- [ ] Phase 08 — sharing & persistence (resolve the 3 risks in 00-overview.md first)
+- [x] Phase 08 — sharing & persistence
 - [ ] Phase 09 — SEO & analytics
 - [ ] Phase 10 — deploy
 
@@ -131,6 +131,43 @@ extends the plan, note it in one line here so the next session doesn't rediscove
   multi-page PDFs from Chromium's own `page.pdf()` and two real DOCX files from `pandoc` (both already
   present in this environment) confirmed page/paragraph gutters, word-level highlighting, stats, and
   the PPTX rejection message, with zero console errors.
+
+- **Phase 08 notes:** the three pre-Phase-8 risks were resolved for real, not just documented: SSH'd into
+  the VPS and found `postgres-pgvector` (the container behind `postgresdb`) had `ssl = off` and `ufw`
+  inactive, confirming both Risk 1 and Risk 3. Generated a self-signed cert with `openssl` inside the
+  container (`postgres` runs as uid 999), set `ssl = on` in `postgresql.conf`, and restarted the
+  container — a brief blip for any other app sharing that Postgres instance, done with the user's
+  explicit go-ahead since it's shared infra. `DATABASE_URL` gained `?sslmode=require&connection_limit=1
+  &pool_timeout=20`; the self-signed cert means no CA to verify against, which is fine for `sslmode=require`
+  (encrypt, don't verify) — except recent `pg`/`pg-connection-string` now treats `require` as an alias for
+  `verify-full` and rejects the self-signed cert, so `&uselibpqcompat=true` is also required to restore the
+  old encrypt-only behavior (see the warning in `pg`'s own connection code if this ever needs revisiting).
+  **Prisma 7 gotcha:** the `prisma-database-setup` skill's driver-adapter pattern (`@prisma/adapter-pg` +
+  `PrismaPg`) moves the connection URL out of `schema.prisma` into `prisma.config.ts`, and critically, the
+  generated client **fully qualifies every query's schema name at codegen time** rather than trusting the
+  connection's `search_path` — so `?schema=difflab` in the URL (which is all classic Prisma needed, and
+  still all `prisma migrate` needs) silently does nothing for actual query execution and every query 404's
+  with "table `public.diffs` does not exist" even though the table is right there in `difflab`. The fix is
+  the multi-schema feature: `schemas = ["difflab"]` on the `datasource` block plus `@@schema("difflab")`
+  on the `Diff` model (no `previewFeatures` flag needed — it's stable in 7.10). `prisma.config.ts` loads
+  `.env.local` explicitly via `dotenv` since the Prisma CLI only reads `.env` by default and this repo
+  keeps every secret in `.env.local`. Sharing itself: `lib/share/url.ts` (client-safe: `lz-string` hash
+  encode/decode, a 6000-char budget past which the share dialog switches to the saved-link flow) is
+  imported directly by each tool component so `#d=...` restores on the *live* `/compare/*` URL, while
+  `/d/[id]` is a Server Component that fetches via `lib/share/persist.ts` (server-only Prisma calls) and
+  feeds the row's `payload` into `ToolShell`'s new `initial` prop — both paths converge on the same
+  `Partial<...ShareData>` restore effect inside each tool. Wired the Share button (new `dialog`/`sonner`
+  shadcn components) into **Text, JSON, and Excel only** — their state is plain JSON-serializable data
+  (text/options, or `ParsedWorkbook`). Image and Document are binary-shaped (pixel canvases, PDF/DOCX
+  bytes) and don't fit the same payload; sharing for those two is deliberately out of scope for v1, same
+  precedent as Phase 3 leaving unbuilt tool cards unlinked rather than half-wiring something misleading.
+  `lib/rate-limit.ts` now takes a `kind` param (`"contact"` | `"diffs"`) so `/api/diffs` gets its own
+  tighter Upstash limiter (10/10min) instead of sharing the contact form's budget. Verified end-to-end
+  with a throwaway Playwright script (same pattern as Phases 5-7): small diff round-tripped through a
+  `#d=` hash in a fresh tab, a 20k-line diff correctly fell back to the oversized-saved-link UI, the
+  created `/d/[id]` rendered its content in a fresh browser context, a `SELECT` against
+  `difflab.diffs` showed real rows with `views` incrementing, and a rapid-fire loop against
+  `/api/diffs` returned 429 — zero console errors throughout.
 
 ## Standing rules (don't relitigate)
 

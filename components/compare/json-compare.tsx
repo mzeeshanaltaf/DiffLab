@@ -12,12 +12,26 @@ import { createUnifiedPatch, downloadTextFile } from "@/lib/diff/patch";
 import { diffJsonValues } from "@/lib/diff/json-diff";
 import { parseJsonWithError, prettyPrintJson, type IndentOption, type JsonParseResult } from "@/lib/parse/json";
 import { getDiffExample } from "@/lib/diff/examples";
+import { readShareHashFromLocation } from "@/lib/share/url";
 import { InputPaneHeader } from "./input-pane";
 import { JsonToolbar } from "./json-toolbar";
 import { StatsBar } from "./stats-bar";
 
 type ViewMode = "split" | "unified";
 type MergeDirection = "a-to-b" | "b-to-a";
+
+interface JsonShareData {
+  left: string;
+  right: string;
+  leftFilename: string | null;
+  rightFilename: string | null;
+  viewMode: ViewMode;
+  precision: Precision;
+  ignoreCase: boolean;
+  ignoreRegex: string;
+  indent: IndentOption;
+  sortKeys: boolean;
+}
 
 const EMPTY_PARSE = parseJsonWithError("");
 
@@ -26,7 +40,7 @@ function displayError(parse: JsonParseResult) {
   return parse.error;
 }
 
-export function JsonCompare() {
+export function JsonCompare({ initial }: { initial?: Partial<JsonShareData> }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const leftTextRef = useRef("");
   const rightTextRef = useRef("");
@@ -140,6 +154,48 @@ export function JsonCompare() {
     const command = direction === "next" ? goToNextChunk : goToPreviousChunk;
     if (mergeViewRef.current) command(mergeViewRef.current.b);
     else if (editorViewRef.current) command(editorViewRef.current);
+  }, []);
+
+  const getShareData = useCallback(
+    (): JsonShareData => ({
+      left: leftTextRef.current,
+      right: rightTextRef.current,
+      leftFilename,
+      rightFilename,
+      viewMode,
+      precision,
+      ignoreCase,
+      ignoreRegex,
+      indent,
+      sortKeys,
+    }),
+    [leftFilename, rightFilename, viewMode, precision, ignoreCase, ignoreRegex, indent, sortKeys]
+  );
+
+  // Restore from either a saved diff (passed in as `initial` by /d/[id]) or a
+  // `#d=...` hash on this same tool URL.
+  useEffect(() => {
+    const restore =
+      initial ??
+      (() => {
+        const fromHash = readShareHashFromLocation();
+        return fromHash?.mode === "json" ? (fromHash.data as Partial<JsonShareData>) : undefined;
+      })();
+    if (!restore) return;
+
+    if (typeof restore.left === "string") leftTextRef.current = restore.left;
+    if (typeof restore.right === "string") rightTextRef.current = restore.right;
+    if (restore.leftFilename !== undefined) setLeftFilename(restore.leftFilename);
+    if (restore.rightFilename !== undefined) setRightFilename(restore.rightFilename);
+    if (restore.viewMode) setViewMode(restore.viewMode);
+    if (restore.precision) setPrecision(restore.precision);
+    if (typeof restore.ignoreCase === "boolean") setIgnoreCase(restore.ignoreCase);
+    if (typeof restore.ignoreRegex === "string") setIgnoreRegex(restore.ignoreRegex);
+    if (restore.indent !== undefined) setIndent(restore.indent);
+    if (typeof restore.sortKeys === "boolean") setSortKeys(restore.sortKeys);
+    setReloadKey((k) => k + 1);
+    // Runs once on mount only -- `initial` is a stable prop for the lifetime of this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -303,6 +359,7 @@ export function JsonCompare() {
         onCopyPatch={handleCopyPatch}
         onPrint={handlePrint}
         summary={{ changes: jsonChanges, bothValid }}
+        getShareData={getShareData}
       />
 
       <div className="grid grid-cols-2 print:hidden">

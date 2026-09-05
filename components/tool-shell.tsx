@@ -33,17 +33,26 @@ const DocumentCompare = dynamic(() => import("@/components/compare/document-comp
   loading,
 });
 
-const TOOLS = {
-  text: TextCompare,
-  json: JsonCompare,
-  excel: ExcelCompare,
-  image: ImageCompare,
-  document: DocumentCompare,
-} as const;
+export type ToolMode = "text" | "json" | "excel" | "image" | "document";
 
-export type ToolMode = keyof typeof TOOLS;
-
-export function ToolShell({ mode }: { mode: ToolMode }) {
-  const Tool = TOOLS[mode];
-  return <Tool />;
+// Only text/json/excel have a shareable, restorable state shape (see
+// components/compare/share-dialog.tsx) -- `initial` is loosely typed here
+// because it crosses the boundary from a saved diff's untyped JSON payload
+// into each tool's own `Partial<...ShareData>` prop.
+export function ToolShell({ mode, initial }: { mode: ToolMode; initial?: unknown }) {
+  switch (mode) {
+    case "text":
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <TextCompare initial={initial as any} />;
+    case "json":
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <JsonCompare initial={initial as any} />;
+    case "excel":
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <ExcelCompare initial={initial as any} />;
+    case "image":
+      return <ImageCompare />;
+    case "document":
+      return <DocumentCompare />;
+  }
 }

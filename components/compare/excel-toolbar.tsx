@@ -9,6 +9,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AlignMode } from "@/lib/diff/sheet-diff";
+import { ShareDialog } from "./share-dialog";
 
 export interface ExcelToolbarProps {
   alignMode: AlignMode;
@@ -22,6 +23,7 @@ export interface ExcelToolbarProps {
   onTrimWhitespaceChange: (value: boolean) => void;
   onSwap: () => void;
   onClear: () => void;
+  getShareData: () => unknown;
 }
 
 export function ExcelToolbar(props: ExcelToolbarProps) {
@@ -108,6 +110,8 @@ export function ExcelToolbar(props: ExcelToolbarProps) {
           />
           <TooltipContent>Clear both sides</TooltipContent>
         </Tooltip>
+
+        <ShareDialog mode="excel" getShareData={props.getShareData} />
       </div>
     </div>
   );

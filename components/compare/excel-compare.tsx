@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseDelimitedText, parseWorkbookFile, type CellValue, type ParsedWorkbook } from "@/lib/parse/sheet";
 import { diffSheet, type AlignMode } from "@/lib/diff/sheet-diff";
+import { readShareHashFromLocation } from "@/lib/share/url";
 import { InputPaneHeader } from "./input-pane";
 import { ExcelToolbar } from "./excel-toolbar";
 import { SheetTabs, type SheetTabInfo } from "./sheet-tabs";
@@ -18,7 +19,18 @@ function formatCell(value: CellValue | undefined): string {
   return String(value);
 }
 
-export function ExcelCompare() {
+interface ExcelShareData {
+  leftWorkbook: ParsedWorkbook | null;
+  rightWorkbook: ParsedWorkbook | null;
+  leftFilename: string | null;
+  rightFilename: string | null;
+  alignMode: AlignMode;
+  keyColumn: number;
+  ignoreCase: boolean;
+  trimWhitespace: boolean;
+}
+
+export function ExcelCompare({ initial }: { initial?: Partial<ExcelShareData> }) {
   const leftScrollRef = useRef<HTMLDivElement | null>(null);
   const rightScrollRef = useRef<HTMLDivElement | null>(null);
   const syncingRef = useRef(false);
@@ -190,6 +202,43 @@ export function ExcelCompare() {
     scrollToRow(next ?? diffRowPositions[0]);
   }, [diffRowPositions, scrollToRow]);
 
+  const getShareData = useCallback(
+    (): ExcelShareData => ({
+      leftWorkbook,
+      rightWorkbook,
+      leftFilename,
+      rightFilename,
+      alignMode,
+      keyColumn,
+      ignoreCase,
+      trimWhitespace,
+    }),
+    [leftWorkbook, rightWorkbook, leftFilename, rightFilename, alignMode, keyColumn, ignoreCase, trimWhitespace]
+  );
+
+  // Restore from either a saved diff (passed in as `initial` by /d/[id]) or a
+  // `#d=...` hash on this same tool URL.
+  useEffect(() => {
+    const restore =
+      initial ??
+      (() => {
+        const fromHash = readShareHashFromLocation();
+        return fromHash?.mode === "excel" ? (fromHash.data as Partial<ExcelShareData>) : undefined;
+      })();
+    if (!restore) return;
+
+    if (restore.leftWorkbook !== undefined) setLeftWorkbook(restore.leftWorkbook);
+    if (restore.rightWorkbook !== undefined) setRightWorkbook(restore.rightWorkbook);
+    if (restore.leftFilename !== undefined) setLeftFilename(restore.leftFilename);
+    if (restore.rightFilename !== undefined) setRightFilename(restore.rightFilename);
+    if (restore.alignMode) setAlignMode(restore.alignMode);
+    if (typeof restore.keyColumn === "number") setKeyColumn(restore.keyColumn);
+    if (typeof restore.ignoreCase === "boolean") setIgnoreCase(restore.ignoreCase);
+    if (typeof restore.trimWhitespace === "boolean") setTrimWhitespace(restore.trimWhitespace);
+    // Runs once on mount only -- `initial` is a stable prop for the lifetime of this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const hasAnyFile = leftWorkbook !== null || rightWorkbook !== null;
 
   return (
@@ -206,6 +255,7 @@ export function ExcelCompare() {
         onTrimWhitespaceChange={setTrimWhitespace}
         onSwap={handleSwap}
         onClear={handleClearAll}
+        getShareData={getShareData}
       />
 
       <SheetTabs sheets={sheetNames} activeSheet={activeSheet} onActiveSheetChange={setManualActiveSheet} />

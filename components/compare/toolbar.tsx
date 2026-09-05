@@ -32,6 +32,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { LANGUAGES } from "@/lib/cm/languages";
 import type { Precision } from "@/lib/diff/normalize";
 import { DIFF_EXAMPLES, DIFF_EXAMPLE_CATEGORIES } from "@/lib/diff/examples";
+import { ShareDialog } from "./share-dialog";
 
 const SORTED_LANGUAGES = [LANGUAGES[0], ...LANGUAGES.slice(1).sort((a, b) => a.label.localeCompare(b.label))];
 
@@ -77,6 +78,7 @@ export interface ToolbarProps {
   onExportPatch: () => void;
   onCopyPatch: () => void;
   onPrint: () => void;
+  getShareData: () => unknown;
 }
 
 export function Toolbar(props: ToolbarProps) {
@@ -336,6 +338,8 @@ export function Toolbar(props: ToolbarProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <ShareDialog mode="text" getShareData={props.getShareData} />
       </div>
     </div>
   );

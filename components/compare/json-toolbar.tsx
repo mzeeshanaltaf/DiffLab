@@ -23,6 +23,7 @@ import type { Precision } from "@/lib/diff/normalize";
 import type { IndentOption } from "@/lib/parse/json";
 import { DIFF_EXAMPLES } from "@/lib/diff/examples";
 import { JsonSummary, type JsonSummaryProps } from "./json-summary";
+import { ShareDialog } from "./share-dialog";
 
 const JSON_EXAMPLES = DIFF_EXAMPLES.filter((example) => example.languageId === "json");
 
@@ -70,6 +71,7 @@ export interface JsonToolbarProps {
   onCopyPatch: () => void;
   onPrint: () => void;
   summary: JsonSummaryProps;
+  getShareData: () => unknown;
 }
 
 export function JsonToolbar(props: JsonToolbarProps) {
@@ -320,6 +322,8 @@ export function JsonToolbar(props: JsonToolbarProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <ShareDialog mode="json" getShareData={props.getShareData} />
       </div>
     </div>
   );

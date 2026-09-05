@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["difflab"]
+}
+
+model Diff {
+  id        String    @id
+  mode      String
+  payload   Json
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+  views     Int       @default(0)
+
+  @@map("diffs")
+  @@schema("difflab")
+}
