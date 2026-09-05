@@ -30,10 +30,10 @@ export function ImageCompare() {
   const zoomPan = useZoomPan();
 
   useEffect(() => {
-    if (!onionAutoFlicker || mode !== "onion") return;
+    if (!onionAutoFlicker || mode !== "onion" || !leftImage || !rightImage) return;
     const id = window.setInterval(() => setOnionShow((s) => (s === "a" ? "b" : "a")), ONION_FLICKER_MS);
     return () => window.clearInterval(id);
-  }, [onionAutoFlicker, mode]);
+  }, [onionAutoFlicker, mode, leftImage, rightImage]);
 
   const handleFile = useCallback(
     (side: "a" | "b") => async (file: File) => {

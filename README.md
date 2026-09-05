@@ -3,6 +3,8 @@
 A web-based diff and comparison tool — text, JSON, spreadsheets, images, and documents — built with
 Next.js 16, TypeScript, Tailwind v4, and shadcn/ui (Base UI primitives). Modeled on diffchecker.com.
 
+**Live:** [https://difflab.zeeshanai.cloud](https://difflab.zeeshanai.cloud)
+
 ## Features
 
 - **Text diff** ([/compare/text](app/compare/text)) — side-by-side or unified view powered by
@@ -26,7 +28,7 @@ Next.js 16, TypeScript, Tailwind v4, and shadcn/ui (Base UI primitives). Modeled
 - **Dark/emerald themed UI** with a light/dark toggle, landing page, contact form, and privacy policy.
 
 See [docs/plan/00-overview.md](docs/plan/00-overview.md) for the full architecture and design-token
-reference, and the "Status" section of [CLAUDE.md](CLAUDE.md) for phase-by-phase implementation notes.
+reference, and [docs/STATUS.md](docs/STATUS.md) for phase-by-phase implementation notes.
 
 ## Tech stack
 

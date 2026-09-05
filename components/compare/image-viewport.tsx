@@ -168,9 +168,12 @@ export function ImageViewport({
                 >
                   <img src={left.url} alt="Original" draggable={false} className="absolute left-0 top-0" style={{ width: left.width, height: left.height }} />
                 </div>
-                <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-primary" style={{ left: `${sliderPosition}%` }}>
-                  <span className="absolute left-1/2 top-1/2 flex size-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background shadow">
-                    <GripVertical className="size-3.5" />
+                <div
+                  className="pointer-events-none absolute inset-y-0 w-1 bg-primary"
+                  style={{ left: `${sliderPosition}%`, boxShadow: "0 0 0 1.5px rgba(0,0,0,0.55), 0 0 10px rgba(0,0,0,0.35)" }}
+                >
+                  <span className="absolute left-1/2 top-1/2 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-primary bg-background text-primary shadow-lg">
+                    <GripVertical className="size-4" />
                   </span>
                 </div>
               </>

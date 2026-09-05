@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { GitCompareArrows } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const modes = [
@@ -15,8 +14,11 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60 print:hidden">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <GitCompareArrows className="size-4" />
+          <span className="flex size-7 items-center justify-center rounded-md bg-primary">
+            <span className="flex items-center">
+              <span className="size-2.5 rotate-[-8deg] rounded-[3px] border-2 border-primary-foreground" />
+              <span className="-ml-0.75 size-2.5 rotate-[8deg] rounded-[3px] border-2 border-primary-foreground" />
+            </span>
           </span>
           DiffLab
         </Link>
