@@ -1,5 +1,13 @@
 import Link from "next/link";
+import { Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLinkItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const modes = [
   { href: "/compare/text", label: "Text" },
@@ -38,11 +46,29 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/contact"
-            className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            className="hidden rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground sm:inline-block"
           >
             Contact
           </Link>
           <ThemeToggle />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon" aria-label="Open menu" className="sm:hidden" />
+              }
+            >
+              <Menu />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-40">
+              {modes.map((mode) => (
+                <DropdownMenuLinkItem key={mode.href} render={<Link href={mode.href} />}>
+                  {mode.label}
+                </DropdownMenuLinkItem>
+              ))}
+              <DropdownMenuLinkItem render={<Link href="/contact" />}>Contact</DropdownMenuLinkItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
