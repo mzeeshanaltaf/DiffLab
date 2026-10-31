@@ -25,7 +25,6 @@ export interface VirtualGridProps {
   renderCell: (rowIndex: number, columnIndex: number) => ReactNode;
   rowClassName?: (rowIndex: number) => string | undefined;
   cellClassName?: (rowIndex: number, columnIndex: number) => string | undefined;
-  onScroll?: (scrollTop: number, scrollLeft: number) => void;
   className?: string;
 }
 
@@ -47,7 +46,6 @@ export function VirtualGrid({
   renderCell,
   rowClassName,
   cellClassName,
-  onScroll,
   className,
 }: VirtualGridProps) {
   const localRef = useRef<HTMLDivElement | null>(null);
@@ -83,7 +81,6 @@ export function VirtualGrid({
     const target = event.currentTarget;
     setScrollTop(target.scrollTop);
     setScrollLeft(target.scrollLeft);
-    onScroll?.(target.scrollTop, target.scrollLeft);
   }
 
   return (
@@ -108,7 +105,7 @@ export function VirtualGrid({
           localRef.current = node;
           if (containerRef) containerRef.current = node;
         }}
-        className="min-h-0 flex-1 overflow-auto"
+        className="min-h-0 flex-1 overflow-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={handleScroll}
       >
         <div style={{ height: rowCount * rowHeight, width: bodyWidth, position: "relative" }}>

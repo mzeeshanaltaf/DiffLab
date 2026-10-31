@@ -9,6 +9,7 @@ import { buildDiffConfig, computeDiffStats, type DiffStats } from "@/lib/diff/en
 import { DEFAULT_DIFF_OPTIONS, type Precision } from "@/lib/diff/normalize";
 import { createUnifiedPatch, downloadTextFile } from "@/lib/diff/patch";
 import { parseDocumentFile, type DocumentMarker } from "@/lib/parse/document";
+import { attachSharedScrollbar } from "@/lib/scroll/shared-scrollbar";
 import { InputPaneHeader } from "./input-pane";
 import { DocumentToolbar } from "./document-toolbar";
 import { StatsBar } from "./stats-bar";
@@ -20,6 +21,7 @@ const FILE_ACCEPT = ".pdf,.docx,.txt,.md";
 
 export function DocumentCompare() {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollbarRef = useRef<HTMLDivElement | null>(null);
   const leftTextRef = useRef("");
   const rightTextRef = useRef("");
   const leftMarkersRef = useRef<DocumentMarker[]>([]);
@@ -141,6 +143,7 @@ export function DocumentCompare() {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    let detachScrollbar: (() => void) | undefined;
 
     mergeViewRef.current?.destroy();
     mergeViewRef.current = null;
@@ -183,6 +186,11 @@ export function DocumentCompare() {
         collapseUnchanged,
         diffConfig,
       });
+      detachScrollbar = attachSharedScrollbar(
+        scrollbarRef.current!,
+        [mergeViewRef.current.a.scrollDOM, mergeViewRef.current.b.scrollDOM],
+        "x"
+      );
     } else {
       editorViewRef.current = new EditorView({
         parent: container,
@@ -205,6 +213,7 @@ export function DocumentCompare() {
     updateStats();
 
     return () => {
+      detachScrollbar?.();
       mergeViewRef.current?.destroy();
       mergeViewRef.current = null;
       editorViewRef.current?.destroy();
@@ -285,6 +294,7 @@ export function DocumentCompare() {
       />
 
       <div ref={containerRef} className="min-h-0 flex-1 print:h-auto" />
+      <div ref={scrollbarRef} className="shared-scrollbar-x" />
     </div>
   );
 }

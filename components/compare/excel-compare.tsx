@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseDelimitedText, parseWorkbookFile, type CellValue, type ParsedWorkbook } from "@/lib/parse/sheet";
 import { diffSheet, type AlignMode } from "@/lib/diff/sheet-diff";
 import { readShareHashFromLocation } from "@/lib/share/url";
+import { attachSharedScrollbar } from "@/lib/scroll/shared-scrollbar";
 import { InputPaneHeader } from "./input-pane";
 import { ExcelToolbar } from "./excel-toolbar";
 import { SheetTabs, type SheetTabInfo } from "./sheet-tabs";
@@ -33,7 +34,8 @@ interface ExcelShareData {
 export function ExcelCompare({ initial }: { initial?: Partial<ExcelShareData> }) {
   const leftScrollRef = useRef<HTMLDivElement | null>(null);
   const rightScrollRef = useRef<HTMLDivElement | null>(null);
-  const syncingRef = useRef(false);
+  const horizontalBarRef = useRef<HTMLDivElement | null>(null);
+  const verticalBarRef = useRef<HTMLDivElement | null>(null);
 
   const [leftWorkbook, setLeftWorkbook] = useState<ParsedWorkbook | null>(null);
   const [rightWorkbook, setRightWorkbook] = useState<ParsedWorkbook | null>(null);
@@ -169,18 +171,19 @@ export function ExcelCompare({ initial }: { initial?: Partial<ExcelShareData> })
     setManualActiveSheet(null);
   }, []);
 
-  const handleGridScroll = useCallback((source: "left" | "right", scrollTop: number, scrollLeft: number) => {
-    if (syncingRef.current) return;
-    syncingRef.current = true;
-    const target = source === "left" ? rightScrollRef.current : leftScrollRef.current;
-    if (target) {
-      target.scrollTop = scrollTop;
-      target.scrollLeft = scrollLeft;
-    }
-    requestAnimationFrame(() => {
-      syncingRef.current = false;
-    });
-  }, []);
+  const hasGrids = activeSheet !== null;
+
+  useEffect(() => {
+    const left = leftScrollRef.current;
+    const right = rightScrollRef.current;
+    if (!hasGrids || !left || !right) return;
+    const detachHorizontal = attachSharedScrollbar(horizontalBarRef.current!, [left, right], "x");
+    const detachVertical = attachSharedScrollbar(verticalBarRef.current!, [left, right], "y");
+    return () => {
+      detachHorizontal();
+      detachVertical();
+    };
+  }, [hasGrids]);
 
   const scrollToRow = useCallback((rowIndex: number) => {
     const top = Math.max(0, rowIndex * ROW_HEIGHT - ROW_HEIGHT * 3);
@@ -299,54 +302,58 @@ export function ExcelCompare({ initial }: { initial?: Partial<ExcelShareData> })
           {hasAnyFile ? "Loading sheets…" : "Upload or paste spreadsheet data on both sides to compare."}
         </div>
       ) : (
-        <div className="grid min-h-0 flex-1 grid-cols-2 divide-x divide-border/60">
-          <VirtualGrid
-            containerRef={leftScrollRef}
-            rowCount={diffResult.rows.length}
-            columnCount={diffResult.columnCount}
-            rowHeight={ROW_HEIGHT}
-            renderRowHeader={(r) => {
-              const row = diffResult.rows[r];
-              return row.leftIndex !== null ? row.leftIndex + 1 : "";
-            }}
-            renderCell={(r, c) => {
-              const row = diffResult.rows[r];
-              if (row.leftIndex === null) return null;
-              return formatCell(leftRows[row.leftIndex]?.[c]);
-            }}
-            rowClassName={(r) => {
-              const row = diffResult.rows[r];
-              if (row.leftIndex === null) return "bg-muted/20";
-              if (row.status === "removed") return "bg-destructive/10";
-              return undefined;
-            }}
-            cellClassName={(r, c) => (diffResult.rows[r].changedColumns.has(c) ? "bg-amber-500/25" : undefined)}
-            onScroll={(top, left) => handleGridScroll("left", top, left)}
-          />
-          <VirtualGrid
-            containerRef={rightScrollRef}
-            rowCount={diffResult.rows.length}
-            columnCount={diffResult.columnCount}
-            rowHeight={ROW_HEIGHT}
-            renderRowHeader={(r) => {
-              const row = diffResult.rows[r];
-              return row.rightIndex !== null ? row.rightIndex + 1 : "";
-            }}
-            renderCell={(r, c) => {
-              const row = diffResult.rows[r];
-              if (row.rightIndex === null) return null;
-              return formatCell(rightRows[row.rightIndex]?.[c]);
-            }}
-            rowClassName={(r) => {
-              const row = diffResult.rows[r];
-              if (row.rightIndex === null) return "bg-muted/20";
-              if (row.status === "added") return "bg-primary/10";
-              return undefined;
-            }}
-            cellClassName={(r, c) => (diffResult.rows[r].changedColumns.has(c) ? "bg-amber-500/25" : undefined)}
-            onScroll={(top, left) => handleGridScroll("right", top, left)}
-          />
-        </div>
+        <>
+          <div className="flex min-h-0 flex-1">
+            <div className="grid min-h-0 min-w-0 flex-1 grid-cols-2 divide-x divide-border/60">
+              <VirtualGrid
+                containerRef={leftScrollRef}
+                rowCount={diffResult.rows.length}
+                columnCount={diffResult.columnCount}
+                rowHeight={ROW_HEIGHT}
+                renderRowHeader={(r) => {
+                  const row = diffResult.rows[r];
+                  return row.leftIndex !== null ? row.leftIndex + 1 : "";
+                }}
+                renderCell={(r, c) => {
+                  const row = diffResult.rows[r];
+                  if (row.leftIndex === null) return null;
+                  return formatCell(leftRows[row.leftIndex]?.[c]);
+                }}
+                rowClassName={(r) => {
+                  const row = diffResult.rows[r];
+                  if (row.leftIndex === null) return "bg-muted/20";
+                  if (row.status === "removed") return "bg-destructive/10";
+                  return undefined;
+                }}
+                cellClassName={(r, c) => (diffResult.rows[r].changedColumns.has(c) ? "bg-amber-500/25" : undefined)}
+              />
+              <VirtualGrid
+                containerRef={rightScrollRef}
+                rowCount={diffResult.rows.length}
+                columnCount={diffResult.columnCount}
+                rowHeight={ROW_HEIGHT}
+                renderRowHeader={(r) => {
+                  const row = diffResult.rows[r];
+                  return row.rightIndex !== null ? row.rightIndex + 1 : "";
+                }}
+                renderCell={(r, c) => {
+                  const row = diffResult.rows[r];
+                  if (row.rightIndex === null) return null;
+                  return formatCell(rightRows[row.rightIndex]?.[c]);
+                }}
+                rowClassName={(r) => {
+                  const row = diffResult.rows[r];
+                  if (row.rightIndex === null) return "bg-muted/20";
+                  if (row.status === "added") return "bg-primary/10";
+                  return undefined;
+                }}
+                cellClassName={(r, c) => (diffResult.rows[r].changedColumns.has(c) ? "bg-amber-500/25" : undefined)}
+              />
+            </div>
+            <div ref={verticalBarRef} className="shared-scrollbar-y" style={{ marginTop: ROW_HEIGHT }} />
+          </div>
+          <div ref={horizontalBarRef} className="shared-scrollbar-x" />
+        </>
       )}
     </div>
   );

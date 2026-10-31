@@ -13,6 +13,7 @@ import { diffJsonValues } from "@/lib/diff/json-diff";
 import { parseJsonWithError, prettyPrintJson, type IndentOption, type JsonParseResult } from "@/lib/parse/json";
 import { getDiffExample } from "@/lib/diff/examples";
 import { readShareHashFromLocation } from "@/lib/share/url";
+import { attachSharedScrollbar } from "@/lib/scroll/shared-scrollbar";
 import { InputPaneHeader } from "./input-pane";
 import { JsonToolbar } from "./json-toolbar";
 import { StatsBar } from "./stats-bar";
@@ -42,6 +43,7 @@ function displayError(parse: JsonParseResult) {
 
 export function JsonCompare({ initial }: { initial?: Partial<JsonShareData> }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollbarRef = useRef<HTMLDivElement | null>(null);
   const leftTextRef = useRef("");
   const rightTextRef = useRef("");
   const mergeViewRef = useRef<MergeView | null>(null);
@@ -202,6 +204,7 @@ export function JsonCompare({ initial }: { initial?: Partial<JsonShareData> }) {
     const container = containerRef.current;
     if (!container) return;
     let cancelled = false;
+    let detachScrollbar: (() => void) | undefined;
 
     async function build() {
       const languageExtension = await getLanguageDef("json")!.load();
@@ -275,6 +278,11 @@ export function JsonCompare({ initial }: { initial?: Partial<JsonShareData> }) {
           collapseUnchanged,
           diffConfig,
         });
+        detachScrollbar = attachSharedScrollbar(
+          scrollbarRef.current!,
+          [mergeViewRef.current.a.scrollDOM, mergeViewRef.current.b.scrollDOM],
+          "x"
+        );
       } else {
         editorViewRef.current = new EditorView({
           parent: container!,
@@ -302,6 +310,7 @@ export function JsonCompare({ initial }: { initial?: Partial<JsonShareData> }) {
 
     return () => {
       cancelled = true;
+      detachScrollbar?.();
       mergeViewRef.current?.destroy();
       mergeViewRef.current = null;
       editorViewRef.current?.destroy();
@@ -396,6 +405,7 @@ export function JsonCompare({ initial }: { initial?: Partial<JsonShareData> }) {
       />
 
       <div ref={containerRef} className="min-h-0 flex-1 print:h-auto" />
+      <div ref={scrollbarRef} className="shared-scrollbar-x" />
     </div>
   );
 }

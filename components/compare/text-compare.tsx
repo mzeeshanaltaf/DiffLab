@@ -10,6 +10,7 @@ import { compileIgnoreRegex, DEFAULT_DIFF_OPTIONS, type Precision } from "@/lib/
 import { createUnifiedPatch, downloadTextFile } from "@/lib/diff/patch";
 import { getDiffExample } from "@/lib/diff/examples";
 import { readShareHashFromLocation } from "@/lib/share/url";
+import { attachSharedScrollbar } from "@/lib/scroll/shared-scrollbar";
 import { InputPaneHeader } from "./input-pane";
 import { Toolbar } from "./toolbar";
 import { StatsBar } from "./stats-bar";
@@ -32,6 +33,7 @@ interface TextShareData {
 
 export function TextCompare({ initial }: { initial?: Partial<TextShareData> }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollbarRef = useRef<HTMLDivElement | null>(null);
   const leftTextRef = useRef("");
   const rightTextRef = useRef("");
   const mergeViewRef = useRef<MergeView | null>(null);
@@ -201,6 +203,7 @@ export function TextCompare({ initial }: { initial?: Partial<TextShareData> }) {
     const container = containerRef.current;
     if (!container) return;
     let cancelled = false;
+    let detachScrollbar: (() => void) | undefined;
 
     async function build() {
       const langDef = getLanguageDef(languageId) ?? getLanguageDef("plaintext")!;
@@ -242,6 +245,11 @@ export function TextCompare({ initial }: { initial?: Partial<TextShareData> }) {
           collapseUnchanged,
           diffConfig,
         });
+        detachScrollbar = attachSharedScrollbar(
+          scrollbarRef.current!,
+          [mergeViewRef.current.a.scrollDOM, mergeViewRef.current.b.scrollDOM],
+          "x"
+        );
       } else {
         editorViewRef.current = new EditorView({
           parent: container!,
@@ -267,6 +275,7 @@ export function TextCompare({ initial }: { initial?: Partial<TextShareData> }) {
 
     return () => {
       cancelled = true;
+      detachScrollbar?.();
       mergeViewRef.current?.destroy();
       mergeViewRef.current = null;
       editorViewRef.current?.destroy();
@@ -352,6 +361,7 @@ export function TextCompare({ initial }: { initial?: Partial<TextShareData> }) {
       />
 
       <div ref={containerRef} className="min-h-0 flex-1 print:h-auto" />
+      <div ref={scrollbarRef} className="shared-scrollbar-x" />
     </div>
   );
 }

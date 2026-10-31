@@ -1,4 +1,4 @@
-import { EditorState, type Extension } from "@codemirror/state";
+import { EditorState, Transaction, type Extension } from "@codemirror/state";
 import {
   EditorView,
   keymap,
@@ -25,6 +25,25 @@ export interface EditorSetupOptions {
   languageExtension: Extension;
 }
 
+/**
+ * CodeMirror scrolls the cursor into view on paste, which lands at the bottom of the pasted text.
+ * Comparing starts from the top, so a paste stays where it is, and one that fills or replaces the
+ * whole document goes to its first line.
+ */
+const keepScrollOnPaste = EditorState.transactionFilter.of((tr) => {
+  if (!tr.isUserEvent("input.paste") || !tr.scrollIntoView) return tr;
+  let replacedDocument = false;
+  tr.changes.iterChangedRanges((fromA, toA) => {
+    if (fromA === 0 && toA === tr.startState.doc.length) replacedDocument = true;
+  });
+  return {
+    changes: tr.changes,
+    selection: tr.selection,
+    effects: replacedDocument ? [...tr.effects, EditorView.scrollIntoView(0)] : tr.effects,
+    annotations: [Transaction.userEvent.of(tr.annotation(Transaction.userEvent)!)],
+  };
+});
+
 /** Hand-rolled equivalent of `basicSetup`, kept minimal for a diff/compare editor. */
 export function buildEditorExtensions(options: EditorSetupOptions): Extension[] {
   return [
@@ -32,6 +51,7 @@ export function buildEditorExtensions(options: EditorSetupOptions): Extension[] 
     highlightActiveLineGutter(),
     highlightSpecialChars(),
     history(),
+    keepScrollOnPaste,
     foldGutter(),
     drawSelection(),
     dropCursor(),

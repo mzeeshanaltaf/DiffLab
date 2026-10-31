@@ -163,7 +163,53 @@
   overflow: auto;
 }
 
+/* Split views scroll sideways through one shared bar (lib/scroll/shared-scrollbar.ts), not per pane. */
+.cm-mergeView .cm-scroller {
+  scrollbar-width: none;
+}
+.cm-mergeView .cm-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+/* Explicitly sized so the bar stays visible on platforms that default to overlay scrollbars. */
+.shared-scrollbar-x {
+  display: none;
+  flex-shrink: 0;
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+.shared-scrollbar-y {
+  flex-shrink: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+.shared-scrollbar-x::-webkit-scrollbar,
+.shared-scrollbar-y::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.shared-scrollbar-x::-webkit-scrollbar-track,
+.shared-scrollbar-y::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+.shared-scrollbar-x::-webkit-scrollbar-thumb,
+.shared-scrollbar-y::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--muted-foreground) 45%, transparent);
+  border-radius: 5px;
+}
+@supports not selector(::-webkit-scrollbar) {
+  .shared-scrollbar-x,
+  .shared-scrollbar-y {
+    scrollbar-width: thin;
+  }
+}
+
 @media print {
+  .shared-scrollbar-x,
+  .shared-scrollbar-y {
+    display: none !important;
+  }
+
   .cm-editor .cm-scroller,
   .cm-mergeView,
   .cm-mergeViewEditor,
