@@ -78,6 +78,15 @@ export const editorTheme = EditorView.theme({
   "&.cm-merge-a .cm-changedText, .cm-deletedChunk .cm-deletedText": {
     backgroundColor: "color-mix(in oklch, var(--destructive) 34%, transparent)",
   },
+  // The library absolutely positions these over the chunk's text. Keep them in flow on their own
+  // row instead; sticky keeps them in view when an unwrapped line scrolls horizontally.
+  ".cm-deletedChunk .cm-chunkButtons": {
+    position: "sticky",
+    insetInlineEnd: "5px",
+    width: "fit-content",
+    marginInlineStart: "auto",
+    padding: "2px 0",
+  },
   ".cm-insertedLine, .cm-deletedLine, .cm-deletedLine del": { textDecoration: "none" },
   ".cm-changeGutter": { width: "4px" },
   "&.cm-merge-a .cm-changedLineGutter, .cm-deletedLineGutter": { background: "var(--destructive)" },

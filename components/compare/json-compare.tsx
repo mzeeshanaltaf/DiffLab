@@ -57,9 +57,9 @@ export function JsonCompare({ initial }: { initial?: Partial<JsonShareData> }) {
   const [precision, setPrecision] = useState<Precision>(DEFAULT_DIFF_OPTIONS.precision);
   const [ignoreCase, setIgnoreCase] = useState(DEFAULT_DIFF_OPTIONS.ignoreCase);
   const [ignoreRegex, setIgnoreRegex] = useState(DEFAULT_DIFF_OPTIONS.ignoreRegex);
-  const [collapseEnabled, setCollapseEnabled] = useState(true);
+  const [collapseEnabled, setCollapseEnabled] = useState(false);
   const [collapseMargin, setCollapseMargin] = useState(3);
-  const [lineWrap, setLineWrap] = useState(false);
+  const [lineWrap, setLineWrap] = useState(true);
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [mergeDirection, setMergeDirection] = useState<MergeDirection>("a-to-b");
   const [indent, setIndent] = useState<IndentOption>(2);

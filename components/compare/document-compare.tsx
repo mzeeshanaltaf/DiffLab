@@ -39,7 +39,7 @@ export function DocumentCompare() {
   const [precision, setPrecision] = useState<Precision>(DEFAULT_DIFF_OPTIONS.precision);
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(DEFAULT_DIFF_OPTIONS.ignoreWhitespace);
   const [ignoreCase, setIgnoreCase] = useState(DEFAULT_DIFF_OPTIONS.ignoreCase);
-  const [collapseEnabled, setCollapseEnabled] = useState(true);
+  const [collapseEnabled, setCollapseEnabled] = useState(false);
   const [collapseMargin, setCollapseMargin] = useState(3);
   const [lineWrap, setLineWrap] = useState(true);
   const [showLineNumbers, setShowLineNumbers] = useState(true);

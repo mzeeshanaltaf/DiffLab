@@ -49,9 +49,9 @@ export function TextCompare({ initial }: { initial?: Partial<TextShareData> }) {
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(DEFAULT_DIFF_OPTIONS.ignoreWhitespace);
   const [ignoreCase, setIgnoreCase] = useState(DEFAULT_DIFF_OPTIONS.ignoreCase);
   const [ignoreRegex, setIgnoreRegex] = useState(DEFAULT_DIFF_OPTIONS.ignoreRegex);
-  const [collapseEnabled, setCollapseEnabled] = useState(true);
+  const [collapseEnabled, setCollapseEnabled] = useState(false);
   const [collapseMargin, setCollapseMargin] = useState(3);
-  const [lineWrap, setLineWrap] = useState(false);
+  const [lineWrap, setLineWrap] = useState(true);
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [languageId, setLanguageId] = useState("plaintext");
   const [mergeDirection, setMergeDirection] = useState<MergeDirection>("a-to-b");
